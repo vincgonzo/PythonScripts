@@ -21,8 +21,11 @@ def plot_distribution(letter_freq):
     plt.xlim([0, len(LETTERS)-1])
     plt.show()
 
-if __name__ == "__main__":
-    plain_txt = "Shanon defined the quantity of infos produced by here source"
+def caeser_crack(cipher_txt):
+    letter_freq = freq_ana(cipher_txt)
+    print(letter_freq)
+    plot_distribution(letter_freq)
 
-    frequencies = freq_ana(plain_txt)
-    plot_distribution(frequencies)
+if __name__ == "__main__":
+    cipher_txt = "PMGOLGOHKGHUE OPUNGJVUMPKLU PHSG VGZHEGOLGCYV LGP GPUGJPWOLYG OH GPZGIEGZVGJOHUNPUNG OLGVYKLYGVMG OLGSL  LYZGVMG OLGHSWOHIL G OH GUV GHGCVYKGJVASKGILGTHKLGVA ."
+    caeser_crack(cipher_txt)

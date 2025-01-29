@@ -83,11 +83,11 @@ cipher = unhexlify(data)
 print("[-] CIPHER: {}".format(cipher))
 
 # First Step
-key_part = brute(cipher[:7], "crypto{".encode())
+key_part = brute(cipher[:6], "crypto{".encode()) # my use case is 'crypto{' but this is start of the flag xored I search for
 print("[-] PARTIAL KEY FOUND: {}".format(key_part)) 
 
 # Second Step
-key = (key_part + "y").encode()
+key = (key_part + "us").encode()
 key += key * int((len(cipher) - len(key))/len(key))
 key += key[:((len(cipher) - len(key))%len(key))]
 print("[-] Decoding using KEY: {}".format(key))

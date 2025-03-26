@@ -26,6 +26,10 @@ class C2Handler(BaseHTTPRequestHandler):
         # first send back 404 to the client
         self.send_response(404)
         self.end_headers()
+    
+    def log_request(self, code = "-", size = "-"):
+        """ rewrite log to just keep interesting datas into c2 request tracks """
+        return 
 
 
 print("server version:", C2Handler.server_version)

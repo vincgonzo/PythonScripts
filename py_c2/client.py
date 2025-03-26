@@ -18,11 +18,10 @@ timestamp = str(int(time.time()))
 # Check the operating system
 if platform.system() == "Windows":
     # Windows environment
-    client = getenv("USERNAME") + "@" + getenv("COMPUTERNAME") + "_" + timestamp
+    client = getenv("USERNAME", "Unknown_User") + "@" + getenv("COMPUTERNAME", "Unknown_ComputerName") + "_" + timestamp
 else:
-    print(getenv("HOSTNAME"))
     # Linux environment
-    client = getenv("USER") + "@" + uname().nodename + "_" + timestamp
+    client = getenv("USER", "Unknown_User") + "@" + uname().nodename + "_" + timestamp
 
 HEADER: dict[str, str] = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"

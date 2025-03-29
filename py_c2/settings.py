@@ -21,6 +21,7 @@ PROXY = None
 C2_SERVER = "localhost"
 CMD_REQUEST = "/student?isbn="
 RESPONSE_PATH = "/library"
+CWD_RESPONSE = "/title"
 RESPONSE_KEY = "index"
 
 HEADER: dict[str, str] = {

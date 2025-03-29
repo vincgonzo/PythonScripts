@@ -20,8 +20,8 @@ PROXY = None
 
 C2_SERVER = "localhost"
 CMD_REQUEST = "/student?isbn="
-CMD_RESPONSE = "/library"
-CMD_RESPONSE_KEY = "index"
+RESPONSE_PATH = "/library"
+RESPONSE_KEY = "index"
 
 HEADER: dict[str, str] = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"

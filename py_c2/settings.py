@@ -32,6 +32,7 @@ HEADER: dict[str, str] = {
 }
 
 INPUT_TIMEOUT = 225
+#INPUT_TIMEOUT = None
 
 # Run this cmd automatically to prevent Azure and other hosting env from killing our active session.
 if platform.system() == "Windows":

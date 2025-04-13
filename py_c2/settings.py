@@ -29,7 +29,7 @@ RESPONSE_PATH = "/library"
 CWD_RESPONSE = "/title"
 RESPONSE_KEY = "index"
 
-STORAGE = "incoming"
+STORAGE = "upload"
 
 HEADER: dict[str, str] = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -45,6 +45,8 @@ else:
     KEEP_ALIVE_CMD = "date +%R" # linux only
 
 DELAY = 3
+
+ZIP_PASSWORD = b"*--->C2_FOR_LIFE<---*"
 
 # <=32 character
 KEY = "myHughSecretKey"

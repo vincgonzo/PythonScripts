@@ -22,11 +22,14 @@ BIND_ADDR = ""
 PROXY = None
 
 C2_SERVER = "localhost"
+FILE_SEND = "/reviews"
 CMD_REQUEST = "/student?isbn="
 FILE_REQUEST = "/author?name="
 RESPONSE_PATH = "/library"
 CWD_RESPONSE = "/title"
 RESPONSE_KEY = "index"
+
+STORAGE = "incoming"
 
 HEADER: dict[str, str] = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"

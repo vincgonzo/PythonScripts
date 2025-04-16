@@ -13,9 +13,11 @@ from os import mkdir, path
 def get_new_session():
     """ This function check if other sessions exists. If none re-initialize variables. However, if sessions do exist,
     allow the red teamer to pick one to become a new active session. """
-    global active_session, pwned_dict, pwned_id
+    global active_session, pwned_dict, pwned_id, cwd
 
     del pwned_dict[active_session]
+
+    cwd = "~"
     # if dict empty, re-init vars to their starting val
     if not pwned_dict:
         print("Waiting for new connection")

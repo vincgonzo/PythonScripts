@@ -22,6 +22,7 @@ class C2Commands(Enum):
     CLS_SLP = "client sleep "
     CLS_KLL = "client kill"
     SERV = "server"
+    SERV_EXT = "server exit"
     SERV_CTRL = "server control "
     SERV_SH_CLS = "server show clients"
     CD = "cd "

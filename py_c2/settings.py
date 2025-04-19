@@ -23,6 +23,7 @@ class C2Commands(Enum):
     CLS_KLL = "client kill"
     SERV = "server"
     SERV_EXT = "server exit"
+    SERV_ZIP = "server zip"
     SERV_UZIP = "server unzip"
     SERV_CTRL = "server control "
     SERV_SH_CLS = "server show clients"

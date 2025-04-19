@@ -23,6 +23,7 @@ class C2Commands(Enum):
     CLS_KLL = "client kill"
     SERV = "server"
     SERV_EXT = "server exit"
+    SERV_UZIP = "server unzip"
     SERV_CTRL = "server control "
     SERV_SH_CLS = "server show clients"
     CD = "cd "
@@ -43,7 +44,8 @@ RESPONSE_PATH = "/library"
 CWD_RESPONSE = "/title"
 RESPONSE_KEY = "index"
 
-STORAGE = "upload"
+INCOMING = "incoming"
+OUTGOING = "outgoing"
 
 HEADER: dict[str, str] = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"

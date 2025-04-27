@@ -26,6 +26,7 @@ class C2Commands(Enum):
     SERV_ZIP = "server zip"
     SERV_UZIP = "server unzip"
     SERV_LS = "server list"
+    SERV_HLP = "server help"
     SERV_SHELL = "server shell"
     SERV_CTRL = "server control "
     SERV_SH_CLS = "server show clients"
@@ -53,6 +54,8 @@ RESPONSE_KEY = "index"
 
 INCOMING = "incoming"
 OUTGOING = "outgoing"
+
+LOG = "pwned.log"
 
 HEADER: dict[str, str] = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"

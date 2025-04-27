@@ -45,7 +45,7 @@ while True:
         if response.status_code == HTTPStatusCode.NOT_FOUND.value:
             raise exceptions.RequestException
     except exceptions.RequestException as e:
-        #print(f"Server down - error: {e}")
+        # print(e)
         time.sleep(3)
         continue
 

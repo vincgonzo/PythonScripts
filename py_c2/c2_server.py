@@ -13,6 +13,7 @@ from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
 from inputimeout import inputimeout, TimeoutOccurred
 from os import mkdir, path, listdir, system
 
+
 def get_new_session():
     """ This function check if other sessions exists. If none re-initialize variables. However, if sessions do exist,
     allow the red teamer to pick one to become a new active session. """
@@ -175,7 +176,7 @@ class C2Handler(BaseHTTPRequestHandler):
                               "client flip screen - flip a client's screen upside down (Only for Windows)",
                               "client rotate screen - rotate the client's screen (Only for Windows)",
                               "client max sound - turn a client's volume all the way up",
-                              "client play FILENAME.wav - play a .wav sound file on the client",
+                              "client play FILENAME.wav - play a .wav sound file on the client (Only for Windows)",
                               "* - run an OS command on the client that doesn't require input",
                               "* & - run an OS command on the client in the background (coming soon)", sep="\n")
                         print("\nServer Commands:",

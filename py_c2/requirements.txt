@@ -19,3 +19,4 @@ rotate-screen==0.1.5
 shutils==0.1.0
 six==1.17.0
 urllib3==2.3.0
+winaudio==1.0.6

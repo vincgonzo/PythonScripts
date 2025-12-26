@@ -1,11 +1,16 @@
 import os
 from dotenv import load_dotenv
+from fastapi import APIRouter
 from typing import Union
 from pydantic import BaseModel
 from fastapi import FastAPI
 load_dotenv()  
 
-app = FastAPI()
+from app.api.v1.endpoints import UserAPI
+
+api_router = APIRouter()
+
+api_router.include_router(UserAPI)
 
 class Item(BaseModel):
     name: str

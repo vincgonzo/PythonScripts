@@ -1,4 +1,4 @@
 
 
 all:
-	uvicorn api.helloroot:app --reload
+	python3 main.py --reload

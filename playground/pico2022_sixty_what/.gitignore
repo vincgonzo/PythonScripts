@@ -1,0 +1,10 @@
+vuln
+payload
+flag.txt
+bin/*
+pwntool*
+.gdb_history
+
+venv/*
+
+*.cfg

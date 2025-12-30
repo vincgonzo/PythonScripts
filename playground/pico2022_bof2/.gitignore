@@ -1,0 +1,7 @@
+vuln
+flag.txt
+bin/*
+pwntool*
+.gdb_history
+
+*.cfg
